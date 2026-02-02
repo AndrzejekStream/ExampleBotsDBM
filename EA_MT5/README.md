@@ -16,6 +16,7 @@ Wzorzec jest:
 - Sesje: **24/5 (bez ograniczeń godzinowych)**.
 - Interwały: **M1 (główny)** i **M5 (trend)**.
 - Maksymalnie jedna pozycja na instrument.
+- Uruchomienie: **lokalnie (nie na VPS)**.
 
 ## Logika wejścia (Entry)
 ### LONG
