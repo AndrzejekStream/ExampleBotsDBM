@@ -6,7 +6,7 @@
 
 #include <Trade/Trade.mqh>
 
-input double   RiskPercent            = 0.5;   // % risk per trade
+input double   RiskPercent            = 1.0;   // % risk per trade
 input double   DailyDDLimitPercent    = 2.0;   // daily drawdown limit
 input double   WeeklyDDLimitPercent   = 5.0;   // weekly drawdown limit
 input int      MaxConsecutiveLosses   = 3;     // max losses in a row
@@ -31,12 +31,15 @@ input double   BreakEvenAtR           = 1.0;   // move SL to BE at +1R
 input int      TimeExitBars           = 36;    // close after N M1 bars
 
 input int      ATRPeriod              = 14;
-input double   ATRMinPips             = 3.0;   // minimal ATR on M1
+input double   ATRMinPips             = 1.0;   // minimal ATR on M1
 
-input double   MaxSpreadPipsFX        = 1.5;   // EURUSD
+input double   MaxSpreadPipsFX        = 2.5;   // EURUSD
 input double   MaxSpreadPointsXAU     = 40.0;  // XAUUSD
 
 input double   SlippagePoints         = 10.0;  // for market execution
+input bool     AggressiveMode         = true;  // widen entry window + faster exits
+input double   AggressiveRetraceMin   = 0.382; // 38.2%
+input double   AggressiveRetraceMax   = 0.786; // 78.6%
 
 CTrade trade;
 
@@ -377,10 +380,12 @@ void TryOpenTrade()
 
    if(lastBOSDirection == trend && lastImpulseHigh != 0.0 && lastImpulseLow != 0.0)
    {
-      double fib50 = lastImpulseLow + (lastImpulseHigh - lastImpulseLow) * 0.5;
-      double fib618 = lastImpulseLow + (lastImpulseHigh - lastImpulseLow) * 0.618;
+      double retraceMin = AggressiveMode ? AggressiveRetraceMin : 0.5;
+      double retraceMax = AggressiveMode ? AggressiveRetraceMax : 0.618;
+      double fibMin = lastImpulseLow + (lastImpulseHigh - lastImpulseLow) * retraceMin;
+      double fibMax = lastImpulseLow + (lastImpulseHigh - lastImpulseLow) * retraceMax;
 
-      if(trend == 1 && bid >= MathMin(fib50, fib618) && bid <= MathMax(fib50, fib618))
+      if(trend == 1 && bid >= MathMin(fibMin, fibMax) && bid <= MathMax(fibMin, fibMax))
       {
          double sl = lastImpulseLow;
          double slDistance = bid - sl;
@@ -405,7 +410,7 @@ void TryOpenTrade()
             }
          }
       }
-      else if(trend == -1 && ask <= MathMax(fib50, fib618) && ask >= MathMin(fib50, fib618))
+      else if(trend == -1 && ask <= MathMax(fibMin, fibMax) && ask >= MathMin(fibMin, fibMax))
       {
          double sl = lastImpulseHigh;
          double slDistance = sl - ask;
@@ -469,7 +474,8 @@ void ManagePosition()
    if(entryBarIndex >= 0 && TimeExitBars > 0)
    {
       int currentBar = iBarShift(_Symbol, PERIOD_M1, TimeCurrent());
-      if(currentBar >= 0 && (currentBar - entryBarIndex) >= TimeExitBars)
+      int exitBars = AggressiveMode ? MathMax(1, TimeExitBars / 2) : TimeExitBars;
+      if(currentBar >= 0 && (currentBar - entryBarIndex) >= exitBars)
       {
          trade.PositionClose(_Symbol);
          LogEvent("MANAGE", "Closed position by time exit");

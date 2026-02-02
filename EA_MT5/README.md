@@ -22,14 +22,14 @@ Wzorzec jest:
 ### LONG
 1. Na M5: trend wzrostowy = ostatnie dwa **HH** oraz **HL**.
 2. Na M1: BOS w górę (zamknięcie świecy powyżej ostatniego swing high).
-3. Retracement ceny do **50–61.8%** ostatniego impulsu.
+3. Retracement ceny do **50–61.8%** ostatniego impulsu (w trybie agresywnym **38.2–78.6%**).
 4. Brak przeciwnego BOS po wybiciu.
 5. Handel 24/5 (brak filtra sesji).
 
 ### SHORT
 1. Na M5: trend spadkowy = ostatnie dwa **LL** oraz **LH**.
 2. Na M1: BOS w dół (zamknięcie świecy poniżej ostatniego swing low).
-3. Retracement ceny do **50–61.8%** ostatniego impulsu.
+3. Retracement ceny do **50–61.8%** ostatniego impulsu (w trybie agresywnym **38.2–78.6%**).
 4. Brak przeciwnego BOS po wybiciu.
 5. Handel 24/5 (brak filtra sesji).
 
@@ -41,14 +41,14 @@ Wzorzec jest:
 - **Time exit** po X świecach, jeśli TP/SL nie został trafiony.
 
 ## Risk Management
-- **0.5%** ryzyka na trade.
+- **1.0%** ryzyka na trade (tryb agresywny).
 - **DD dzienny**: 2% (blokada handlu do końca dnia).
 - **DD tygodniowy**: 5% (blokada handlu do końca tygodnia).
 - **3 straty z rzędu**: stop handlu do następnego dnia.
 
 ## Filtry bezpieczeństwa
-- Spread: **EURUSD ≤ 1.5 pips**, **XAUUSD ≤ 40 punktów**.
-- Zmienność: **ATR(M1) > minimalny próg**.
+- Spread: **FX ≤ 2.5 pips**, **XAUUSD ≤ 40 punktów**.
+- Zmienność: **ATR(M1) > minimalny próg (1.0 pips)**.
 - Sesje czasowe: **OFF**.
 - News filter: **OFF (MVP)**.
 
@@ -82,3 +82,4 @@ EA wstrzymuje handel przy:
 
 ## Parametryzacja
 Wszystkie kluczowe wartości dostępne jako `input` w EA.
+Domyślnie włączony jest **AggressiveMode**, który rozszerza strefę wejścia i skraca time-exit.
