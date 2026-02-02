@@ -51,7 +51,6 @@ datetime lastBarTime = 0;
 
 // Track BOS/impulse
 int lastBOSDirection = 0; // 1 long, -1 short
-int lastBOSBarShift = -1;
 double lastImpulseHigh = 0.0;
 double lastImpulseLow = 0.0;
 
@@ -84,6 +83,17 @@ void LogEvent(string eventType, string message)
    string timeStr = TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS);
    FileWrite(handle, timeStr, _Symbol, eventType, message);
    FileClose(handle);
+}
+
+//+------------------------------------------------------------------+
+//| Helper: pip/point conversion                                     |
+//+------------------------------------------------------------------+
+double PointsPerPip()
+{
+   int digits = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
+   if(digits == 3 || digits == 5)
+      return 10.0;
+   return 1.0;
 }
 
 //+------------------------------------------------------------------+
@@ -183,18 +193,16 @@ void UpdateBOS()
 
    double close1 = iClose(_Symbol, PERIOD_M5, 1);
 
-   if(close1 > lastHigh && lastBOSBarShift != 1)
+   if(close1 > lastHigh)
    {
       lastBOSDirection = 1;
-      lastBOSBarShift = 1;
       lastImpulseHigh = close1;
       lastImpulseLow = lastLow;
       LogEvent("BOS", "Bullish BOS detected");
    }
-   else if(close1 < lastLow && lastBOSBarShift != 1)
+   else if(close1 < lastLow)
    {
       lastBOSDirection = -1;
-      lastBOSBarShift = 1;
       lastImpulseHigh = lastHigh;
       lastImpulseLow = close1;
       LogEvent("BOS", "Bearish BOS detected");
@@ -211,7 +219,7 @@ bool IsSpreadOk()
    if(_Symbol == "XAUUSD")
       return spreadPoints <= MaxSpreadPointsXAU;
 
-   double spreadPips = spreadPoints * _Point / SymbolInfoDouble(_Symbol, SYMBOL_POINT) / 10.0;
+   double spreadPips = spreadPoints / PointsPerPip();
    return spreadPips <= MaxSpreadPipsFX;
 }
 
@@ -225,7 +233,7 @@ bool IsAtrOk()
    if(CopyBuffer(atrM5Handle, 0, 0, 1, atrValues) <= 0)
       return false;
 
-   double atrPips = atrValues[0] / _Point / 10.0;
+   double atrPips = atrValues[0] / _Point / PointsPerPip();
    return atrPips >= ATRMinPips;
 }
 
@@ -376,7 +384,7 @@ void TryOpenTrade()
       {
          double sl = lastImpulseLow;
          double slDistance = bid - sl;
-         double minSL = MinSLPips * _Point * 10.0;
+         double minSL = MinSLPips * _Point * PointsPerPip();
          if(slDistance < minSL)
             sl = bid - minSL;
 
@@ -401,7 +409,7 @@ void TryOpenTrade()
       {
          double sl = lastImpulseHigh;
          double slDistance = sl - ask;
-         double minSL = MinSLPips * _Point * 10.0;
+         double minSL = MinSLPips * _Point * PointsPerPip();
          if(slDistance < minSL)
             sl = ask + minSL;
 
