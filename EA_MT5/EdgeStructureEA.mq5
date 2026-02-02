@@ -538,19 +538,24 @@ void OnTick()
 //+------------------------------------------------------------------+
 void OnTradeTransaction(const MqlTradeTransaction& trans, const MqlTradeRequest& request, const MqlTradeResult& result)
 {
-   if(trans.type == TRADE_TRANSACTION_DEAL_ADD && trans.entry == DEAL_ENTRY_OUT)
+   if(trans.type == TRADE_TRANSACTION_DEAL_ADD)
    {
-      double profit = 0.0;
       if(HistoryDealSelect(trans.deal))
-         profit = HistoryDealGetDouble(trans.deal, DEAL_PROFIT);
-      if(profit < 0)
       {
-         consecutiveLosses++;
-         LogEvent("RISK", "Loss recorded. Consecutive losses: " + IntegerToString(consecutiveLosses));
-      }
-      else
-      {
-         consecutiveLosses = 0;
+         int entryType = (int)HistoryDealGetInteger(trans.deal, DEAL_ENTRY);
+         if(entryType == DEAL_ENTRY_OUT)
+         {
+            double profit = HistoryDealGetDouble(trans.deal, DEAL_PROFIT);
+            if(profit < 0)
+            {
+               consecutiveLosses++;
+               LogEvent("RISK", "Loss recorded. Consecutive losses: " + IntegerToString(consecutiveLosses));
+            }
+            else
+            {
+               consecutiveLosses = 0;
+            }
+         }
       }
    }
 }
