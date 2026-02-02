@@ -12,26 +12,26 @@ input double   WeeklyDDLimitPercent   = 5.0;   // weekly drawdown limit
 input int      MaxConsecutiveLosses   = 3;     // max losses in a row
 input int      MagicNumber            = 55001;
 
-input int      Session1StartHour      = 8;
+input int      Session1StartHour      = 0;
 input int      Session1StartMinute    = 0;
-input int      Session1EndHour        = 11;
-input int      Session1EndMinute      = 0;
-input int      Session2StartHour      = 14;
-input int      Session2StartMinute    = 30;
-input int      Session2EndHour        = 17;
+input int      Session1EndHour        = 23;
+input int      Session1EndMinute      = 59;
+input int      Session2StartHour      = 0;
+input int      Session2StartMinute    = 0;
+input int      Session2EndHour        = 0;
 input int      Session2EndMinute      = 0;
 input int      TimeOffsetHours        = 0;     // broker time -> CET
 
-input int      TrendLookbackBars      = 200;   // M15 lookback for swings
-input int      BOSLookbackBars        = 200;   // M5 lookback for swings
+input int      TrendLookbackBars      = 200;   // M5 lookback for swings
+input int      BOSLookbackBars        = 200;   // M1 lookback for swings
 input int      MinSLPips              = 8;     // minimum SL in pips
 input double   RiskReward             = 2.0;   // TP = RR * SL
 input bool     UseBreakEven           = true;
 input double   BreakEvenAtR           = 1.0;   // move SL to BE at +1R
-input int      TimeExitBars           = 36;    // close after N M5 bars
+input int      TimeExitBars           = 36;    // close after N M1 bars
 
 input int      ATRPeriod              = 14;
-input double   ATRMinPips             = 3.0;   // minimal ATR on M5
+input double   ATRMinPips             = 3.0;   // minimal ATR on M1
 
 input double   MaxSpreadPipsFX        = 1.5;   // EURUSD
 input double   MaxSpreadPointsXAU     = 40.0;  // XAUUSD
@@ -156,9 +156,9 @@ bool GetLastTwoFractals(int handle, int buffer, int lookback, double &lastVal, i
 }
 
 //+------------------------------------------------------------------+
-//| Trend detection on M15                                           |
+//| Trend detection on M5                                            |
 //+------------------------------------------------------------------+
-int GetTrendM15()
+int GetTrendM5()
 {
    double lastHigh, prevHigh, lastLow, prevLow;
    int lastHighShift, prevHighShift, lastLowShift, prevLowShift;
@@ -178,7 +178,7 @@ int GetTrendM15()
 }
 
 //+------------------------------------------------------------------+
-//| Check BOS on M5 and record impulse                               |
+//| Check BOS on M1 and record impulse                               |
 //+------------------------------------------------------------------+
 void UpdateBOS()
 {
@@ -191,7 +191,7 @@ void UpdateBOS()
    if(!gotHighs || !gotLows)
       return;
 
-   double close1 = iClose(_Symbol, PERIOD_M5, 1);
+   double close1 = iClose(_Symbol, PERIOD_M1, 1);
 
    if(close1 > lastHigh)
    {
@@ -366,7 +366,7 @@ void TryOpenTrade()
    if(!IsAtrOk())
       return;
 
-   int trend = GetTrendM15();
+   int trend = GetTrendM5();
    if(trend == 0)
       return;
 
@@ -399,7 +399,7 @@ void TryOpenTrade()
             {
                entryPrice = ask;
                initialSL = sl;
-               entryBarIndex = iBarShift(_Symbol, PERIOD_M5, TimeCurrent());
+               entryBarIndex = iBarShift(_Symbol, PERIOD_M1, TimeCurrent());
                hasPosition = true;
                LogEvent("TRADE", "Opened long position");
             }
@@ -424,7 +424,7 @@ void TryOpenTrade()
             {
                entryPrice = bid;
                initialSL = sl;
-               entryBarIndex = iBarShift(_Symbol, PERIOD_M5, TimeCurrent());
+               entryBarIndex = iBarShift(_Symbol, PERIOD_M1, TimeCurrent());
                hasPosition = true;
                LogEvent("TRADE", "Opened short position");
             }
@@ -468,7 +468,7 @@ void ManagePosition()
 
    if(entryBarIndex >= 0 && TimeExitBars > 0)
    {
-      int currentBar = iBarShift(_Symbol, PERIOD_M5, TimeCurrent());
+      int currentBar = iBarShift(_Symbol, PERIOD_M1, TimeCurrent());
       if(currentBar >= 0 && (currentBar - entryBarIndex) >= TimeExitBars)
       {
          trade.PositionClose(_Symbol);
@@ -482,9 +482,9 @@ void ManagePosition()
 //+------------------------------------------------------------------+
 int OnInit()
 {
-   fractalsM5Handle = iFractals(_Symbol, PERIOD_M5);
-   fractalsM15Handle = iFractals(_Symbol, PERIOD_M15);
-   atrM5Handle = iATR(_Symbol, PERIOD_M5, ATRPeriod);
+   fractalsM5Handle = iFractals(_Symbol, PERIOD_M1);
+   fractalsM15Handle = iFractals(_Symbol, PERIOD_M5);
+   atrM5Handle = iATR(_Symbol, PERIOD_M1, ATRPeriod);
 
    if(fractalsM5Handle == INVALID_HANDLE || fractalsM15Handle == INVALID_HANDLE || atrM5Handle == INVALID_HANDLE)
    {
@@ -522,7 +522,7 @@ void OnDeinit(const int reason)
 //+------------------------------------------------------------------+
 void OnTick()
 {
-   datetime currentBarTime = iTime(_Symbol, PERIOD_M5, 0);
+   datetime currentBarTime = iTime(_Symbol, PERIOD_M1, 0);
    if(currentBarTime == lastBarTime)
       return;
 

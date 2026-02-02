@@ -1,9 +1,9 @@
-# MT5 Expert Advisor Specification (EURUSD / XAUUSD)
+# MT5 Expert Advisor Specification (FX Majors + Selected USD Crosses)
 
 ## Edge (Etap 0)
-Edge opiera się na powtarzalnym zachowaniu rynku w trakcie sesji o najwyższej płynności (Londyn + Nowy Jork):
-- **Strukturalny trend na M15 (HH/HL lub LL/LH)** filtruje kierunek, w którym statystycznie częściej występują kontynuacje.
-- **BOS na M5** identyfikuje impuls wybicia struktury w kierunku trendu.
+Edge opiera się na powtarzalnym zachowaniu rynku w trakcie aktywności 24/5:
+- **Strukturalny trend na M5 (HH/HL lub LL/LH)** filtruje kierunek, w którym statystycznie częściej występują kontynuacje.
+- **BOS na M1** identyfikuje impuls wybicia struktury w kierunku trendu.
 - **Powrót do strefy 50–61.8% impulsu** zapewnia wejście na lepszej cenie po krótkotrwałej korekcie.
 
 Wzorzec jest:
@@ -12,25 +12,25 @@ Wzorzec jest:
 - algorytmizowalny zero-jedynkowo.
 
 ## Założenia
-- Instrumenty: **EURUSD, XAUUSD**.
-- Sesje: **08:00–11:00 CET** oraz **14:30–17:00 CET**.
-- Interwały: **M5 (główny)** i **M15 (trend)**.
+- Instrumenty: **EURUSD, GBPUSD, USDCHF, USDJPY, USDCHN, AUDUSD, NZDUSD, USDCAD, USDEK**.
+- Sesje: **24/5 (bez ograniczeń godzinowych)**.
+- Interwały: **M1 (główny)** i **M5 (trend)**.
 - Maksymalnie jedna pozycja na instrument.
 
 ## Logika wejścia (Entry)
 ### LONG
-1. Na M15: trend wzrostowy = ostatnie dwa **HH** oraz **HL**.
-2. Na M5: BOS w górę (zamknięcie świecy powyżej ostatniego swing high).
+1. Na M5: trend wzrostowy = ostatnie dwa **HH** oraz **HL**.
+2. Na M1: BOS w górę (zamknięcie świecy powyżej ostatniego swing high).
 3. Retracement ceny do **50–61.8%** ostatniego impulsu.
 4. Brak przeciwnego BOS po wybiciu.
-5. Aktywne godziny sesji.
+5. Handel 24/5 (brak filtra sesji).
 
 ### SHORT
-1. Na M15: trend spadkowy = ostatnie dwa **LL** oraz **LH**.
-2. Na M5: BOS w dół (zamknięcie świecy poniżej ostatniego swing low).
+1. Na M5: trend spadkowy = ostatnie dwa **LL** oraz **LH**.
+2. Na M1: BOS w dół (zamknięcie świecy poniżej ostatniego swing low).
 3. Retracement ceny do **50–61.8%** ostatniego impulsu.
 4. Brak przeciwnego BOS po wybiciu.
-5. Aktywne godziny sesji.
+5. Handel 24/5 (brak filtra sesji).
 
 ## Logika wyjścia (Exit)
 - **SL strukturalny**: poniżej ostatniego HL (LONG) / powyżej ostatniego LH (SHORT).
@@ -47,8 +47,8 @@ Wzorzec jest:
 
 ## Filtry bezpieczeństwa
 - Spread: **EURUSD ≤ 1.5 pips**, **XAUUSD ≤ 40 punktów**.
-- Zmienność: **ATR(M5) > minimalny próg**.
-- Sesje czasowe: **ON**.
+- Zmienność: **ATR(M1) > minimalny próg**.
+- Sesje czasowe: **OFF**.
 - News filter: **OFF (MVP)**.
 
 ## Fail States & Auto-shutdown
@@ -57,10 +57,10 @@ EA wstrzymuje handel przy:
 - 3 stratach z rzędu,
 - przekroczeniu limitu spreadu,
 - braku wystarczającej zmienności (ATR),
-- braku sesji.
+- braku sesji (wyłączone).
 
 ## Regime Detection
-- Trend wykrywany na M15 za pomocą struktury swingów (HH/HL lub LL/LH).
+- Trend wykrywany na M5 za pomocą struktury swingów (HH/HL lub LL/LH).
 - Brak trendu → EA nie handluje.
 
 ## Metryki (logowane w CSV)
